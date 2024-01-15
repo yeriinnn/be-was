@@ -30,18 +30,21 @@ public class RequestHandler implements Runnable {
 
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             // TODO 사용자 요청에 대한 처리는 이 곳에 구현하면 된다.
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
             String requestLine = reader.readLine();
 
-            // 요청이 "/index.html" 경로로 오면 파일을 읽어 응답합니다.
+            // 요청이 "/index.html" 경로로 오면 파일을 읽어 응답
             if (requestLine != null && requestLine.startsWith("GET /index.html")) {
                 serveIndexHtml(out);
             } else {
-                // 기본적으로 "Hello World" 응답을 보냅니다.
                 sendHelloWorldResponse(out);
             }
 
-//
+            while(!requestLine.equals("")){
+               requestLine = reader.readLine();
+              System.out.println("request : " + requestLine);
+            }
+
             DataOutputStream dos = new DataOutputStream(out);
             byte[] body = "Hello World".getBytes();
             response200Header(dos, body.length);
@@ -53,16 +56,16 @@ public class RequestHandler implements Runnable {
 
     private void serveIndexHtml(OutputStream out) throws IOException {
         try {
-            // index.html 파일을 읽어옵니다.
+            // index.html 파일을 읽어오기
             Path indexPath = Paths.get("src/main/resources/templates/index.html");
             byte[] body = Files.readAllBytes(indexPath);
 
-            // HTTP 응답을 보냅니다.
+            // HTTP 응답 보내기
             DataOutputStream dos = new DataOutputStream(out);
             response200Header(dos, body.length);
             responseBody(dos, body);
         } catch (IOException e) {
-            // 파일을 읽는 도중 오류가 발생하면 500 Internal Server Error를 응답합니다.
+            // 파일을 읽는 도중 오류가 발생하면 500 Internal Server Error를 응답
             DataOutputStream dos = new DataOutputStream(out);
             //response200Header(dos);
             responseBody(dos, "Internal Server Error".getBytes());
@@ -70,7 +73,7 @@ public class RequestHandler implements Runnable {
     }
 
     private void sendHelloWorldResponse(OutputStream out) throws IOException {
-        // 기본적으로 "Hello World" 응답을 보냅니다.
+        // 기본: Hello World 응답을 보냄
         DataOutputStream dos = new DataOutputStream(out);
         byte[] body = "Hello World".getBytes();
         response200Header(dos, body.length);
