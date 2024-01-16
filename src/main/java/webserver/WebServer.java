@@ -4,6 +4,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 public class WebServer {
     private static final Logger logger = LoggerFactory.getLogger(WebServer.class);
     private static final int DEFAULT_PORT = 8080;
+    private static final int AWAIT_TERMINATION_SECONDS = 60; // 대기 시간을 60초로 설정
 
     public static void main(String args[]) throws Exception {
         int port = (args == null || args.length == 0) ? DEFAULT_PORT : Integer.parseInt(args[0]);
@@ -28,8 +30,17 @@ public class WebServer {
                 executorService.submit(new RequestHandler(connection));
             }
         } finally {
-            // 작업이 완료되면 Executor 서비스를 종료
+            // 현재 수행 중인 작업들이 완료될 때까지 최대 60초 대기
             executorService.shutdown();
+            try {
+                if (!executorService.awaitTermination(AWAIT_TERMINATION_SECONDS, TimeUnit.SECONDS)) {
+                    // 지정된 시간 내에 작업들이 완료되지 않으면 강제 종료
+                    executorService.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                logger.error("Error waiting for ExecutorService termination: {}", e.getMessage());
+                // 혹시 대기 중에 인터럽트가 발생하면 로그를 남기고 계속 진행
+            }
         }
     }
 }
