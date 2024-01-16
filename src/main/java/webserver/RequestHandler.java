@@ -1,3 +1,5 @@
+package webserver;
+
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -11,12 +13,16 @@ public class RequestHandler implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
     private static final String WEB_ROOT = "src/main/resources/templates"; // 웹 리소스의 루트 디렉토리
 
-    private Socket connection; // 클라이언트와의 연결을 담당하는 소켓
+    private final Socket connection; // 클라이언트와의 연결을 담당하는 소켓
     private OutputStream outputStream; // 외부에서 주입된 OutputStream
 
-    public RequestHandler(Socket connectionSocket, OutputStream outputStream) {
+    public RequestHandler(Socket connectionSocket) {
         this.connection = connectionSocket;
-        this.outputStream = outputStream;
+        try {
+            this.outputStream = connection.getOutputStream(); // 소켓의 OutputStream을 사용
+        } catch (IOException e) {
+            logger.error("Error creating output stream: {}", e.getMessage());
+        }
     }
 
     public void run() {
