@@ -17,6 +17,7 @@ public class UrlParser {
         return null; // 유효한 URL이 없는 경우
     }
 
+    //필요한 내용만 추출 후 map형태로 저장
     public static Map<String, String> extractHeaders(BufferedReader reader) throws IOException {
         Map<String, String> headers = new HashMap<>();
         String headerLine;
