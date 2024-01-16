@@ -2,6 +2,8 @@ package webserver;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,23 +13,23 @@ public class WebServer {
     private static final int DEFAULT_PORT = 8080;
 
     public static void main(String args[]) throws Exception {
-        int port = 0;
-        if (args == null || args.length == 0) {
-            port = DEFAULT_PORT;
-        } else {
-            port = Integer.parseInt(args[0]);
-        }
+        int port = (args == null || args.length == 0) ? DEFAULT_PORT : Integer.parseInt(args[0]);
 
-        // 서버소켓을 생성한다. 웹서버는 기본적으로 8080번 포트를 사용한다.
+        // 캐시된 스레드 풀을 생성한다.
+        ExecutorService executorService = Executors.newCachedThreadPool();
+
+        // 서버 소켓 생성
         try (ServerSocket listenSocket = new ServerSocket(port)) {
-            logger.info("Web Application Server started {} port.", port);
+            logger.info("Web Application Server started on {} port.", port);
 
-            // 클라이언트가 연결될때까지 대기한다.
+            // 클라이언트 연결을 수락하고 작업을 Executor에 제출
             Socket connection;
             while ((connection = listenSocket.accept()) != null) {
-                Thread thread = new Thread(new RequestHandler(connection));
-                thread.start();
+                executorService.submit(new RequestHandler(connection));
             }
+        } finally {
+            // 작업이 완료되면 Executor 서비스를 종료
+            executorService.shutdown();
         }
     }
 }
