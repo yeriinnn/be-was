@@ -31,7 +31,7 @@ public class RequestHandler implements Runnable {
 
     public void run() {
         lock.lock();
-        try{ //lock: 동시성 제어
+        try{
             logger.debug("New Client Connect! Connected IP : {}, Port : {}", connection.getInetAddress(),
                     connection.getPort());
 
@@ -73,7 +73,7 @@ public class RequestHandler implements Runnable {
 
     private void parseAndLogHttpRequest(String requestLine, BufferedReader reader) {
         // HTTP 메서드 파싱
-        String[] parts = requestLine.split("\\s+"); // 공백을 기준으로 문자열 분리
+        String[] parts = requestLine.split("\\s+");
         if (parts.length >= 3) {
             String httpMethod = parts[0];
             String uri = parts[1];
@@ -82,7 +82,6 @@ public class RequestHandler implements Runnable {
             // HTTP 요청 헤더 파싱
             Map<String, String> headers = parseHeaders(reader);
 
-            // 로거를 이용하여 HTTP Request 내용 및 메서드, 헤더 출력
             logger.debug("Received HTTP Request - Method: {}, URI: {}, HTTP Version: {}", httpMethod, uri, httpVersion);
             logger.debug("Host: {}", headers.get("Host"));
             logger.debug("Accept: {}", headers.get("Accept"));
@@ -98,9 +97,8 @@ public class RequestHandler implements Runnable {
         Map<String, String> headers = new HashMap<>();
         String line;
         try {
-            // 빈 줄이 나올 때까지 헤더를 읽어들임
             while ((line = reader.readLine()) != null && !line.isEmpty()) {
-                String[] headerParts = line.split(":\\s+", 2); // ": "을 기준으로 문자열 분리
+                String[] headerParts = line.split(":\\s+", 2); 
                 if (headerParts.length == 2) {
                     headers.put(headerParts[0], headerParts[1]);
                 }
@@ -143,9 +141,8 @@ public class RequestHandler implements Runnable {
             response200Header(dos, body.length);
             responseBody(dos, body);
         } catch (IOException e) {
-            // 파일을 읽는 도중 오류가 발생하면 500 Internal Server Error를 응답
             DataOutputStream dos = new DataOutputStream(out);
-            //response200Header(dos);
+            response200Header(dos, "Hello World".getBytes().length);
             responseBody(dos, "Internal Server Error".getBytes());
         }
     }
