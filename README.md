@@ -2,10 +2,13 @@
 
 Java Web Application Server 2023
 
+
+
 ## 프로젝트 정보 
 
 이 프로젝트는 우아한 테크코스 박재성님의 허가를 받아 https://github.com/woowacourse/jwp-was 
 를 참고하여 작성되었습니다.
+
 
 
 ## 개발환경
@@ -14,11 +17,13 @@ java 17 version
 IntelliJ
 
 
-## 프로젝트 소개
 
-# 요구사항1) 정적인 html 파일 응답
+# 프로젝트 소개
+
+### 요구사항1) 정적인 html 파일 응답
 http://localhost:8080/index.html 로 접속했을 때 src/main/resources/templates 디렉토리의 index.html 파일을 읽어 클라이언트에 응답
-'''
+
+```
 private void serveIndexHtml(OutputStream out) throws IOException {
         ...
             String filePath = "src/main/resources/templates/index.html";
@@ -27,9 +32,9 @@ private void serveIndexHtml(OutputStream out) throws IOException {
 
         ...
     }
-'''
+```
 
-# 요구사항2) HTTP Request 내용 출력
+### 요구사항2) HTTP Request 내용 출력
 서버로 들어오는 HTTP Request의 내용을 읽고 로거(log.debug)를 이용해 출력
 - 중요하다고 생각하는 request message 파싱
     - host
@@ -37,7 +42,7 @@ private void serveIndexHtml(OutputStream out) throws IOException {
     - user-agent
     - referer
 
-'''
+```
     private void parseAndLogHttpRequest(String requestLine, BufferedReader reader) {
         // HTTP 메서드 파싱
         String[] parts = requestLine.split("\\s+"); 
@@ -71,10 +76,12 @@ private void serveIndexHtml(OutputStream out) throws IOException {
 
         return headers;
     }
-'''
 
-# 요구사항3) Concurrent 패키지 사용
-'''
+```
+
+## 요구사항3) Concurrent 패키지 사용
+
+```
 public void run() {
         lock.lock();
         try{ 
@@ -85,10 +92,10 @@ public void run() {
             lock.unlock();
         }
 }
-'''
 
+```
 
-## 추가학습
+# 추가학습
 
 ## HTTP
 - 웹 어플리케이션에서 HTML, JS, CSS 같은 파일을 웹 서버에게 요청하고 받아오는 핵심 프로토콜
@@ -100,7 +107,7 @@ public void run() {
     - Multiple Request 처리 가능 → 요청이 많을 수록 연속적인 응답을 제공하는 pipeline 방식
     - 하나의 IP 주소가 다수의 웹사이트와 연결 가능
 
-# HTTP 요청 프로토콜
+### HTTP 요청 프로토콜
 - 요청 방식을 정의
 - 클라이언트의 정보를 담고 있음
 - Request Line
@@ -113,7 +120,7 @@ public void run() {
         - BODY에 데이타를 포함시켜 보냄
         - Request line + Header + Body
 
-# HTTP 응답 프로토콜
+### HTTP 응답 프로토콜
 - 사용자가 볼 웹 페이지를 담고 있음
 - Status line
     - HTTP 버전 + 공백 + 상태코드 + 공백 + 상태문구
@@ -122,7 +129,7 @@ public void run() {
     - 400: 클라이언트의 오류
     - 500: 서버의 오류
 
-# URI 구조
+### URI 구조
 - scheme ://host[:port][/path][?query]
 
 
@@ -136,7 +143,7 @@ public void run() {
 💡 java.util.concurrent
 </aside>
 
-# 주요 클래스
+### 주요 클래스
 - Locks: 상호 배제를 사용할 수 있는 클래스 제공
 - Atomic: 동기화가 되어있는 변수를 제공
 - Executors: 쓰레드 풀 생성, 스레드 생명주기 관리, task 등록과 실행 등을 간편하게 처리
