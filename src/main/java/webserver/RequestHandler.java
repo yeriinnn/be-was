@@ -10,7 +10,9 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.locks.Lock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,45 +21,93 @@ public class RequestHandler implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
 
     private Socket connection;
+    private final Lock lock;
 
-    public RequestHandler(Socket connectionSocket) {
+    public RequestHandler(Socket connectionSocket, Lock lock) {
         this.connection = connectionSocket;
+        this.lock = lock;
     }
 
     public void run() {
-        logger.debug("New Client Connect! Connected IP : {}, Port : {}", connection.getInetAddress(),
-                connection.getPort());
+        lock.lock();
+        try{ //lock: 동시성 제어
+            logger.debug("New Client Connect! Connected IP : {}, Port : {}", connection.getInetAddress(),
+                    connection.getPort());
 
-        try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
-            // TODO 사용자 요청에 대한 처리는 이 곳에 구현하면 된다.
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
-            String requestLine = reader.readLine();
+            try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+                String requestLine = reader.readLine();
 
-            // 요청이 "/index.html" 경로로 오면 파일을 읽어 응답
-            if (requestLine != null && requestLine.startsWith("GET /index.html")) {
-                serveIndexHtml(out);
-            } else {
-                sendHelloWorldResponse(out);
+                // 요청이 "/index.html" 경로로 오면 파일을 읽어 응답
+                if (requestLine != null && requestLine.startsWith("GET /index.html")) {
+                    serveIndexHtml(out);
+                } else {
+                    logger.warn("Empty request received.");
+                }
+
+
+                DataOutputStream dos = new DataOutputStream(out);
+                byte[] body = "Hello World".getBytes();
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+            } catch (IOException e) {
+                logger.error(e.getMessage());
             }
+        }catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
 
-            while(!requestLine.equals("")){
-               requestLine = reader.readLine();
-              System.out.println("request : " + requestLine);
-            }
 
-            DataOutputStream dos = new DataOutputStream(out);
-            byte[] body = "Hello World".getBytes();
-            response200Header(dos, body.length);
-            responseBody(dos, body);
-        } catch (IOException e) {
-            logger.error(e.getMessage());
+    }
+
+    private void parseAndLogHttpRequest(String requestLine, BufferedReader reader) {
+        // HTTP 메서드 파싱
+        String[] parts = requestLine.split("\\s+"); // 공백을 기준으로 문자열 분리
+        if (parts.length >= 3) {
+            String httpMethod = parts[0];
+            String uri = parts[1];
+            String httpVersion = parts[2];
+
+            // HTTP 요청 헤더 파싱
+            Map<String, String> headers = parseHeaders(reader);
+
+            // 로거를 이용하여 HTTP Request 내용 및 메서드, 헤더 출력
+            logger.debug("Received HTTP Request - Method: {}, URI: {}, HTTP Version: {}", httpMethod, uri, httpVersion);
+            logger.debug("Host: {}", headers.get("Host"));
+            logger.debug("Accept: {}", headers.get("Accept"));
+            logger.debug("User-Agent: {}", headers.get("User-Agent"));
+            logger.debug("Referer: {}", headers.get("Referer"));
+
+        } else {
+            logger.warn("Invalid HTTP Request format: {}", requestLine);
         }
     }
+
+    private Map<String, String> parseHeaders(BufferedReader reader) {
+        Map<String, String> headers = new HashMap<>();
+        String line;
+        try {
+            // 빈 줄이 나올 때까지 헤더를 읽어들임
+            while ((line = reader.readLine()) != null && !line.isEmpty()) {
+                String[] headerParts = line.split(":\\s+", 2); // ": "을 기준으로 문자열 분리
+                if (headerParts.length == 2) {
+                    headers.put(headerParts[0], headerParts[1]);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error parsing HTTP headers: {}", e.getMessage(), e);
+        }
+        return headers;
+    }
+
 
     private void serveIndexHtml(OutputStream out) throws IOException {
         try {
             // index.html 파일을 읽어오기
-            Path indexPath = Paths.get("src/main/resources/templates/index.html");
+            String filePath = "src/main/resources/templates/index.html";
+            Path indexPath = Paths.get(filePath);
             byte[] body = Files.readAllBytes(indexPath);
 
             // HTTP 응답 보내기
@@ -70,14 +120,6 @@ public class RequestHandler implements Runnable {
             //response200Header(dos);
             responseBody(dos, "Internal Server Error".getBytes());
         }
-    }
-
-    private void sendHelloWorldResponse(OutputStream out) throws IOException {
-        // 기본: Hello World 응답을 보냄
-        DataOutputStream dos = new DataOutputStream(out);
-        byte[] body = "Hello World".getBytes();
-        response200Header(dos, body.length);
-        responseBody(dos, body);
     }
 
 
