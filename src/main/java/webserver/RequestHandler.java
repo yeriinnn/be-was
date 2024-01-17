@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,31 +36,39 @@ public class RequestHandler implements Runnable {
                     connection.getPort());
 
             try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+                BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
                 String requestLine = reader.readLine();
 
-                // 요청이 "/index.html" 경로로 오면 파일을 읽어 응답
-                if (requestLine != null && requestLine.startsWith("GET /index.html")) {
-                    serveIndexHtml(out);
-                } else {
-                    logger.warn("Empty request received.");
-                }
-
-
-                DataOutputStream dos = new DataOutputStream(out);
-                byte[] body = "Hello World".getBytes();
-                response200Header(dos, body.length);
-                responseBody(dos, body);
+                handleHttpRequest(requestLine, out);
+                parseAndLogHttpRequest(requestLine, reader);
             } catch (IOException e) {
-                logger.error(e.getMessage());
+                logger.error("Error while processing client request: {}", e.getMessage());
             }
+
         }catch (Exception e){
             e.printStackTrace();
         } finally {
             lock.unlock();
         }
+    }
 
-
+    private void handleHttpRequest(String requestLine, OutputStream out) {
+        if (requestLine != null && requestLine.startsWith("GET /index.html")) {
+            try {
+                serveIndexHtml(out);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            logger.warn("Unsupported request received.");
+            sendDefaultResponse(out);
+        }
+    }
+    private void sendDefaultResponse(OutputStream out) {
+        DataOutputStream dos = new DataOutputStream(out);
+        byte[] body = "Hello World".getBytes();
+        response200Header(dos, body.length);
+        responseBody(dos, body);
     }
 
     private void parseAndLogHttpRequest(String requestLine, BufferedReader reader) {
@@ -102,27 +111,6 @@ public class RequestHandler implements Runnable {
         return headers;
     }
 
-
-    private void serveIndexHtml(OutputStream out) throws IOException {
-        try {
-            // index.html 파일을 읽어오기
-            String filePath = "src/main/resources/templates/index.html";
-            Path indexPath = Paths.get(filePath);
-            byte[] body = Files.readAllBytes(indexPath);
-
-            // HTTP 응답 보내기
-            DataOutputStream dos = new DataOutputStream(out);
-            response200Header(dos, body.length);
-            responseBody(dos, body);
-        } catch (IOException e) {
-            // 파일을 읽는 도중 오류가 발생하면 500 Internal Server Error를 응답
-            DataOutputStream dos = new DataOutputStream(out);
-            //response200Header(dos);
-            responseBody(dos, "Internal Server Error".getBytes());
-        }
-    }
-
-
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
@@ -140,6 +128,25 @@ public class RequestHandler implements Runnable {
             dos.flush();
         } catch (IOException e) {
             logger.error(e.getMessage());
+        }
+    }
+
+    private void serveIndexHtml(OutputStream out) throws IOException {
+        try {
+            // index.html 파일을 읽어오기
+            String filePath = "src/main/resources/templates/index.html";
+            Path indexPath = Paths.get(filePath);
+            byte[] body = Files.readAllBytes(indexPath);
+
+            // HTTP 응답 보내기
+            DataOutputStream dos = new DataOutputStream(out);
+            response200Header(dos, body.length);
+            responseBody(dos, body);
+        } catch (IOException e) {
+            // 파일을 읽는 도중 오류가 발생하면 500 Internal Server Error를 응답
+            DataOutputStream dos = new DataOutputStream(out);
+            //response200Header(dos);
+            responseBody(dos, "Internal Server Error".getBytes());
         }
     }
 }
