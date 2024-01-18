@@ -2,6 +2,8 @@ package webserver;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,9 +11,12 @@ import org.slf4j.LoggerFactory;
 public class WebServer {
     private static final Logger logger = LoggerFactory.getLogger(WebServer.class);
     private static final int DEFAULT_PORT = 8080;
+    private static final Lock lock = new ReentrantLock();
 
     public static void main(String args[]) throws Exception {
         int port = 0;
+        final Lock lock = new ReentrantLock();
+
         if (args == null || args.length == 0) {
             port = DEFAULT_PORT;
         } else {
@@ -25,9 +30,10 @@ public class WebServer {
             // 클라이언트가 연결될때까지 대기한다.
             Socket connection;
             while ((connection = listenSocket.accept()) != null) {
-                Thread thread = new Thread(new RequestHandler(connection));
+                Thread thread = new Thread(new RequestHandler(connection, lock));
                 thread.start();
             }
         }
+
     }
 }
