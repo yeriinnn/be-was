@@ -31,7 +31,6 @@ public class HandlerMapping {
     // 주어진 HttpRequest를 통해 매핑된 메소드를 찾아 반환
     public static Method getMethodMapped(HttpRequest request) {
         for(String s : GET_MAP.keySet()){
-            logger.debug("key = {}, value = {}",s,GET_MAP.get(s));
         }
         if (request.isGetMethod()) {
             String path = request.getPath();
