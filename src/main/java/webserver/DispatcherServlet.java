@@ -75,7 +75,6 @@ public class DispatcherServlet {
 
     private String getPathForRequest(String requestPath) {
         if(requestPath.startsWith("redirect:")){
-
             return requestPath;
         }
         else if (requestPath.endsWith(".html")) {
@@ -94,7 +93,6 @@ public class DispatcherServlet {
 
     private String handle(HttpRequest request, Method method) throws Throwable {
         String path = request.getPath();
-        logger.debug("hasRequestPathMapped(method) = {}",hasRequestPathMapped(method));
         if (hasRequestPathMapped(method)) {
             return executeRequest(request, method);
         } else {
@@ -109,7 +107,6 @@ public class DispatcherServlet {
     private String executeRequest(HttpRequest request, Method method) throws Throwable {
         MethodHandle methodHandle = getMethodHandle(method);
         if (hasParameter(methodHandle.type())) {
-            logger.debug("getQuery(): {}",request.getQuery());
             Map<String, String> map = (request.isGetMethod()) ? request.getQuery() : null;
             return (String) methodHandle.invoke(map);
         } else {
@@ -119,14 +116,12 @@ public class DispatcherServlet {
 
     private MethodHandle getMethodHandle(Method method) throws NoSuchMethodException, IllegalAccessException {
         MethodType methodType = (hasParameter(method)) ? methodType(String.class, method.getParameterTypes()) : methodType(String.class);
-        logger.debug("methodType = {}",methodType);
         return MethodHandles.lookup()
                 .findVirtual(Controller.class, method.getName(), methodType)
                 .bindTo(new Controller());
     }
 
     private boolean hasParameter(MethodType methodType) {
-        logger.debug("methodType.parameterCount() = {}",methodType.parameterCount());
         return methodType.parameterCount() != 0;
     }
 
