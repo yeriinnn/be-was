@@ -10,7 +10,6 @@ public class HttpResponse {
     private HttpStatus status;
     private String filePath;
     private String responseText;
-    private String contentType;
 
     private String location;
 
@@ -28,7 +27,7 @@ public class HttpResponse {
 
     private HttpResponse(HttpStatus status, String filePath) {
         this.status = status;
-        this.filePath = filePath;  // 경로에 ROOT_PATH와 INDEX를 사용하지 않도록 수정
+        this.filePath = filePath;
     }
 
     public static HttpResponse redirect() {
@@ -64,7 +63,6 @@ public class HttpResponse {
     private HttpResponse(HttpStatus status, String filePath, String contentType) {
         this.status = status;
         this.filePath = filePath;
-        this.contentType = contentType;
     }
 
     public void setResponse(HttpStatus status) {
@@ -84,9 +82,7 @@ public class HttpResponse {
 
     private void responseBody(DataOutputStream dos) throws IOException {
         if (status == HttpStatus.OK || status == HttpStatus.FOUND) {
-            if (responseText != null) {
-                dos.write(responseText.getBytes());
-            } else {
+            if (responseText == null) {
                 try {
                     writeContentFromFile(dos);
                 } catch (FileNotFoundException e) {
@@ -94,6 +90,8 @@ public class HttpResponse {
                     notFoundResponse.setResponse(HttpStatus.NOT_FOUND);
                     notFoundResponse.writeResponseToOutputStream(dos);
                 }
+            } else {
+                dos.write(responseText.getBytes());
             }
         }
     }
@@ -122,8 +120,8 @@ public class HttpResponse {
         ContentType type = ContentType.findBy(this.filePath);
         dos.writeBytes("HTTP/1.1 " + status.getCode() + " " + status.getDescription() + CRLF);
         dos.writeBytes(CONTENT_TYPE + ": " + type.getMime() + ";charset=utf-8" + CRLF);
-        if(location != null){
-            dos.writeBytes("Location : "+location);
+        if (location != null) {
+            dos.writeBytes("Location: " + location);
         }
         System.out.println("location = "+location);
 
