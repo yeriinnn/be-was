@@ -15,6 +15,7 @@ public class HttpRequest {
         BufferedReader br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
         this.requestLine = HttpRequestLine.from(br.readLine());
         this.header = HttpHeader.from(br);
+
     }
 
     public static HttpRequest from(InputStream in) throws IOException {
@@ -24,8 +25,8 @@ public class HttpRequest {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("<URI>").append("\n").append(requestLine.toString()).append("\n");
-        sb.append("<HEADER>").append("\n").append(header.toString()).append("\n");
+        sb.append("====URI====").append("\n").append(requestLine.toString()).append("\n");
+        sb.append("====HEADER====").append("\n").append(header.toString()).append("\n");
         return sb.toString();
     }
 
@@ -44,4 +45,6 @@ public class HttpRequest {
     public boolean isGetMethod() {
         return "GET".equals(requestLine.getMethod());
     }
+
+    public boolean isPostMethod() {return "POST".equals(requestLine.getMethod());}
 }
