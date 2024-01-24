@@ -23,9 +23,10 @@ public class DispatcherServlet {
     private static final Logger logger = LoggerFactory.getLogger(DispatcherServlet.class);
     private static final DispatcherServlet servlet = new DispatcherServlet();
 
+
+    //디스패처서블릿 싱글톤 적용
     private DispatcherServlet() {
     }
-
     public static DispatcherServlet getInstance() {
         return servlet;
     }
@@ -42,18 +43,16 @@ public class DispatcherServlet {
 
             if (method == null && request.isGetMethod()) {
                 path = request.getPath();
-            }
-            else {
+            } else {
                 path = String.valueOf(handle(request, method));
-                logger.debug("path = {}",path);
+                logger.debug("path = {}", path);
             }
 
-            if (path.startsWith("redirect:")){
-                httpResponse.setResponse(HttpStatus.MOVED_PERMANENTLY);
+            if (path.startsWith("redirect:")) {
+                // 리다이렉트를 위한 처리
+                httpResponse.setResponse(HttpStatus.FOUND); // 302 Found 상태 코드 사용
                 httpResponse.setLocation(path.substring("redirect:".length()));
-            }
-
-            else {
+            } else {
                 String filePath = getPathForRequest(path);
                 logger.debug("filepath = {}", filePath);
 
@@ -65,7 +64,7 @@ public class DispatcherServlet {
                     return;
                 }
             }
-            logger.debug("location = {}",httpResponse.getLocation());
+            logger.debug("location = {}", httpResponse.getLocation());
             processDispatchResult(httpResponse, out);
             logger.debug("Response End\n{}", httpResponse);
         } catch (Throwable throwable) {
