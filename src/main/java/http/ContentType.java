@@ -25,7 +25,6 @@ public enum ContentType {
     }
 
     public static ContentType findBy(String file){
-        System.out.println("file = " + file);
 
         if (file == null) {
             return NONE;
