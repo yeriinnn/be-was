@@ -19,7 +19,7 @@ public class Controller {
     // GET 회원가입
     @GetMapping(value = "/user/create")
     public String createUser(Map<String, String> query) {
-        logger.debug("Received GET request to create user.");
+        logger.debug("GET을 통해 유저 회원가입");
 
         String userId = query.get(USER_ID);
         String password = query.get(PASSWORD);
@@ -31,7 +31,7 @@ public class Controller {
         User user = new User(userId, password, name, email);
 
         Database.addUser(user);
-        logger.debug("User created: {}", user);
+        logger.debug("유저 생성 완료 : {}", user);
 
         return "redirect:/user/login.html";
     }
