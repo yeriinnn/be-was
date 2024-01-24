@@ -30,10 +30,6 @@ public class HttpResponse {
         this.filePath = filePath;
     }
 
-    public static HttpResponse redirect() {
-        return new HttpResponse(HttpStatus.FOUND, INDEX);
-    }
-
     public static HttpResponse init(String filePath) {
         return new HttpResponse(HttpStatus.OK, filePath);
     }
@@ -41,10 +37,6 @@ public class HttpResponse {
     public static HttpResponse ok(String filePath) {
         ContentType type = ContentType.findBy(filePath);
         return new HttpResponse(HttpStatus.OK, filePath, type.getMime());
-    }
-
-    public static HttpResponse internalServerError(String filePath) {
-        return new HttpResponse(HttpStatus.INTERNAL_SERVER_ERROR, filePath);
     }
 
     public static HttpResponse internalServerErrorWithText(String errorMessage) {
@@ -106,7 +98,6 @@ public class HttpResponse {
             filePathObj = Paths.get(ROOT_PATH, INDEX, this.filePath);
         }
 
-        // 나머지 코드는 그대로 유지
         if (!Files.exists(filePathObj)) {
             throw new FileNotFoundException("File not found");
         }
@@ -121,12 +112,7 @@ public class HttpResponse {
         dos.writeBytes("HTTP/1.1 " + status.getCode() + " " + status.getDescription() + CRLF);
         dos.writeBytes(CONTENT_TYPE + ": " + type.getMime() + ";charset=utf-8" + CRLF);
         if (location != null) {
-            dos.writeBytes("Location: " + location);
-        }
-        System.out.println("location = "+location);
-
-        if (status == HttpStatus.FOUND) {
-            dos.writeBytes(LOCATION + ": " + INDEX + CRLF);
+            dos.writeBytes(LOCATION + ": " + location + CRLF);
         }
 
         dos.writeBytes(CRLF);
