@@ -49,6 +49,7 @@ public class HttpResponse {
         return filePath;
     }
 
+    //리소스 경로 매핑
     public void mapResourcePath(ContentType type) {
         if (type == NONE) {
             throw new NotSupportedContentTypeException();
@@ -56,6 +57,7 @@ public class HttpResponse {
         this.filePath = ROOT_PATH + type.getPath() + this.filePath;
     }
 
+    //사용자 정보로 응답세팅
     public void setResponse(User user) throws IOException {
         byte[] body = convertFilePathToBody(user);
         this.body = body;
@@ -67,6 +69,7 @@ public class HttpResponse {
         this.body = body;
     }
 
+    //파일 경로
     private byte[] convertFilePathToBody() throws IOException {
         handlePathByHttpStatus();
         return Files.readAllBytes(new File(filePath).toPath());
@@ -152,12 +155,6 @@ public class HttpResponse {
 
     public void addCookie(String name, String value) {
         cookies.add(Cookie.from(name, value));
-    }
-
-
-    // for test
-    public int getCookieSize() {
-        return cookies.size();
     }
 
     @Override
