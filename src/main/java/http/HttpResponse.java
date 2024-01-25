@@ -19,8 +19,7 @@ public class HttpResponse {
     private static final Logger logger = LoggerFactory.getLogger(HttpResponse.class);
     private static final String ROOT_PATH = "src/main/resources";
     private static final String INDEX = "/index.html";
-    private static final String NOT_SUPPORT_ERROR_PAGE = "src/main/resources/templates/not_support_error.html";
-    private static final String NOT_FOUND_ERROR_PAGE = "src/main/resources/templates/not_found_error.html";
+    private static final String ERROR_PAGE = "src/main/resources/templates/error.html";
     private static final String MAIN_PAGE = "src/main/resources/templates" + INDEX;
 
     private byte[] body;
@@ -88,9 +87,9 @@ public class HttpResponse {
 
     private void handlePathByHttpStatus() {
         if (status == NOT_FOUND) {
-            filePath = NOT_FOUND_ERROR_PAGE;
+            filePath = ERROR_PAGE;
         } else if (status == BAD_REQUEST) {
-            filePath = NOT_SUPPORT_ERROR_PAGE;
+            filePath = ERROR_PAGE;
         } else if (status == FOUND) {
             filePath = MAIN_PAGE;
         }
